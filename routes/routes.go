@@ -9,7 +9,7 @@ func Setup(app *fiber.App) {
 
 	app.Get("/goals", controllers.GetGoals)
 	app.Get("/goals/:id", controllers.GetGoal)
-	app.Post("/goals/add", controllers.CreateGoal)
+	app.Post("/goals/", controllers.CreateGoal)
 	app.Put("/goals/:id", controllers.UpdateGoal)
 	app.Delete("/goals/:id", controllers.DeleteGoal)
 
