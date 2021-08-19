@@ -9,30 +9,29 @@ import (
 type Goal struct {
   Id        int    `json:"id"`
   Title     string `json:"title"`
-  Status 		bool   `json:"status"`
+  Status    bool   `json:"status"`
 }
 
 var goals = []*Goal{
 	{
 		Id:        1,
 		Title:     "Read about Promises",
-		Status: 		true,
+		Status:    true,
 	},
 	{
 		Id:        2,
 		Title:     "Read about Closures",
-		Status: 		false,
+		Status:    false,
 	},
 }
 
 func GetGoals(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(
-  	// "success":  true,
-  	// "data": fiber.Map{
-			// "goals": goals,
-		// },
-		goals,
-  )
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"goals": goals,
+		},
+	})
 }
 
 func GetGoal(c *fiber.Ctx) error {
@@ -51,7 +50,7 @@ func GetGoal(c *fiber.Ctx) error {
 		})
 	}
 
-	// find todo and return
+	// find goal and return
 	for _, goal := range goals {
 		if goal.Id == id {
 			return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -63,7 +62,7 @@ func GetGoal(c *fiber.Ctx) error {
 		}
 	}
 
-	// if todo not available
+	// if goal not available
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 		"success": false,
 		"message": "Goal not found",
@@ -88,14 +87,14 @@ func CreateGoal(c *fiber.Ctx) error {
 		})
 	}
 
-	// create a todo variable
+	// create a goal variable
 	goal := &Goal{
 		Id:        len(goals) + 1,
 		Title:     body.Title,
 		Status: false,
 	}
 
-	// append in todos
+	// append in goal
 	goals = append(goals, goal)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -123,7 +122,7 @@ func DeleteGoal(c *fiber.Ctx) error {
 		})
 	}
 
-	// find and delete todo
+	// find and delete goal
 	for i, goal := range goals {
 		if goal.Id == id {
 
@@ -133,7 +132,7 @@ func DeleteGoal(c *fiber.Ctx) error {
 		}
 	}
 
-	// if todo not found
+	// if goal not found
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 		"success": false,
 		"message": "Goal not found",
