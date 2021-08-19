@@ -1,4 +1,4 @@
-go mod
+go mod:\
 The `go mod init` command initializes and writes a new go.mod file in the current directory, in effect creating a new module rooted at the current directory.
 
 go mod tidy
