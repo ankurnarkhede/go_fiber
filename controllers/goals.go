@@ -3,16 +3,10 @@ package controllers
 import (
 	"strconv"
 	"github.com/gofiber/fiber/v2"
-	// "github.com/RohitKuwar/go_fiber/models"
+	"github.com/RohitKuwar/go_fiber/models"
 )
 
-type Goal struct {
-  Id        int    `json:"id"`
-  Title     string `json:"title"`
-  Status    string  `json:"status"`
-}
-
-var goals = []Goal{
+var goals = []models.Goal{
 	{
 		Id:        1,
 		Title:     "Read about Promises",
@@ -76,7 +70,7 @@ func CreateGoal(c *fiber.Ctx) error {
 	}
 
 	// create a goal variable
-	goal := &Goal{
+	goal := &models.Goal{
 		Id:        len(goals) + 1,
 		Title:     body.Title,
 		Status: 	 body.Status,
@@ -141,7 +135,7 @@ func UpdateGoal(c *fiber.Ctx) error {
 
 	for i, goal := range goals {
 		if goal.Id == id {
-			goals[i] = Goal{
+			goals[i] = models.Goal{
 				Id:       id,
 				Title:    body.Title,
 				Status: 	body.Status,
