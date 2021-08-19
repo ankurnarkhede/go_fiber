@@ -9,29 +9,24 @@ import (
 type Goal struct {
   Id        int    `json:"id"`
   Title     string `json:"title"`
-  Status    bool   `json:"status"`
+  Status    string  `json:"status"`
 }
 
-var goals = []*Goal{
+var goals = []Goal{
 	{
 		Id:        1,
 		Title:     "Read about Promises",
-		Status:    true,
+		Status:    "completed",
 	},
 	{
 		Id:        2,
 		Title:     "Read about Closures",
-		Status:    false,
+		Status:    "active",
 	},
 }
 
 func GetGoals(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"goals": goals,
-		},
-	})
+	return c.Status(fiber.StatusOK).JSON(goals)
 }
 
 func GetGoal(c *fiber.Ctx) error {
@@ -44,7 +39,6 @@ func GetGoal(c *fiber.Ctx) error {
 	// if error in parsing string to int
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
 			"message": "Cannot parse Id",
 			"error":   err,
 		})
@@ -53,25 +47,20 @@ func GetGoal(c *fiber.Ctx) error {
 	// find goal and return
 	for _, goal := range goals {
 		if goal.Id == id {
-			return c.Status(fiber.StatusOK).JSON(fiber.Map{
-				"success": true,
-				"data": fiber.Map{
-					"goal": goal,
-				},
-			})
+			return c.Status(fiber.StatusOK).JSON(goal)
 		}
 	}
 
 	// if goal not available
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"success": false,
 		"message": "Goal not found",
 	})
 }
 
 func CreateGoal(c *fiber.Ctx) error {
 	type Request struct {
-		Title string `json:"title"`
+		Title 	string 	`json:"title"`
+		Status  string  `json:"status"`
 	}
 
 	var body Request
@@ -81,7 +70,6 @@ func CreateGoal(c *fiber.Ctx) error {
 	// if error
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
 			"message": "Cannot parse JSON",
 			"error":   err,
 		})
@@ -91,20 +79,14 @@ func CreateGoal(c *fiber.Ctx) error {
 	goal := &Goal{
 		Id:        len(goals) + 1,
 		Title:     body.Title,
-		Status: false,
+		Status: 	 body.Status,
 	}
 
 	// append in goal
-	goals = append(goals, goal)
+	goals = append(goals, *goal)
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"goal": goal,
-		},
-	})
+	return c.Status(fiber.StatusCreated).JSON(goal)
 }
-
 
 func DeleteGoal(c *fiber.Ctx) error {
 	// get param
@@ -116,7 +98,6 @@ func DeleteGoal(c *fiber.Ctx) error {
 	// if parameter cannot parse
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
 			"message": "Cannot parse id",
 			"error":   err,
 		})
@@ -125,81 +106,50 @@ func DeleteGoal(c *fiber.Ctx) error {
 	// find and delete goal
 	for i, goal := range goals {
 		if goal.Id == id {
-
 			goals = append(goals[:i], goals[i+1:]...)
-
 			return c.SendStatus(fiber.StatusNoContent)
 		}
 	}
 
 	// if goal not found
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"success": false,
 		"message": "Goal not found",
 	})
 }
 
 func UpdateGoal(c *fiber.Ctx) error {
-	// find parameter
+	type request struct {
+		Title      string `json:"title"`
+		Status string   `json:"status"`
+	}
+	var body request
+
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot parse JSON",
+		})
+	}
+
 	paramID := c.Params("id")
-
-	// convert parameter string to int
 	id, err := strconv.Atoi(paramID)
-
-	// if parameter cannot parse
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
-			"message": "Cannot parse id",
-			"error":   err,
+			"error": "Invalid id.",
 		})
 	}
 
-	// request structure
-	type Request struct {
-		Title     *string `json:"title"`
-		Status *bool   `json:"status"`
-	}
-
-	var body Request
-	err = c.BodyParser(&body)
-
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
-			"message": "Cannot parse JSON",
-			"error":   err,
-		})
-	}
-
-	var goal *Goal
-
-	for _, t := range goals {
-		if t.Id == id {
-			goal = t
-			break
+	for i, goal := range goals {
+		if goal.Id == id {
+			goals[i] = Goal{
+				Id:       id,
+				Title:    body.Title,
+				Status: 	body.Status,
+			}
+			return c.Status(fiber.StatusOK).JSON(goals[i])
 		}
 	}
 
-	if goal.Id == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"success": false,
-			"message": "Not found",
-		})
-	}
-
-	if body.Title != nil {
-		goal.Title = *body.Title
-	}
-
-	if body.Status != nil {
-		goal.Status = *body.Status
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"goal": goal,
-		},
-	})
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Record not found"})
 }
+
