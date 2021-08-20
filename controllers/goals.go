@@ -1,59 +1,105 @@
 package controllers
 
 import (
-	"strconv"
+	"context"
+	"fmt"
 
+	"cloud.google.com/go/firestore"
 	"github.com/RohitKuwar/go_fiber/models"
 	"github.com/gofiber/fiber/v2"
+
+	"log"
+
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
-var goals = []models.Goal{
-	{
-		Id:     1,
-		Title:  "Read about Promises",
-		Status: "completed",
-	},
-	{
-		Id:     2,
-		Title:  "Read about Closures",
-		Status: "active",
-	},
+var goals = []models.Goal{}
+
+type goalsModel struct {
+	Id     int    `json:"id"`
+	Title  string `json:"title"`
+	Status string `json:"status"`
 }
 
 func GetGoals(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(goals)
+
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
+	var newGoals []models.Goal
+	iter := client.Collection("goals").Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Failed to iterate: %v", err)
+		}
+
+		fmt.Print(doc.Data())
+
+		var tempGoals models.Goal
+		if err := doc.DataTo(&tempGoals); err != nil {
+			break
+		}
+		newGoals = append(newGoals, tempGoals)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(newGoals)
 }
 
 func GetGoal(c *fiber.Ctx) error {
 	// get parameter value
 	paramID := c.Params("id")
 
-	// convert parameter value string to int
-	id, err := strconv.Atoi(paramID)
-
-	// if error in parsing string to int
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Cannot parse Id",
-			"error":   err,
+		log.Fatalln(err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
+
+	dsnap, err := client.Collection("goals").Doc(paramID).Get(ctx)
+	if err != nil {
+		return err
+	}
+	m := dsnap.Data()
+	fmt.Printf("Document data: %#v\n", m)
+
+	if m == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Goal not found",
 		})
 	}
 
-	// find goal and return
-	for _, goal := range goals {
-		if goal.Id == id {
-			return c.Status(fiber.StatusOK).JSON(goal)
-		}
-	}
+	return c.Status(fiber.StatusNotFound).JSON(m)
 
-	// if goal not available
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"message": "Goal not found",
-	})
 }
 
 func CreateGoal(c *fiber.Ctx) error {
 	type Request struct {
+		Id     string `json:"id"`
 		Title  string `json:"title"`
 		Status string `json:"status"`
 	}
@@ -72,17 +118,37 @@ func CreateGoal(c *fiber.Ctx) error {
 
 	// create a goal variable
 	goal := &models.Goal{
-		Id:     len(goals) + 1,
+		Id:     body.Id,
 		Title:  body.Title,
 		Status: body.Status,
 	}
 
-	// append in goal
-	goals = append(goals, *goal)
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
+
+	_, err = client.Collection("goals").Doc(goal.Id).Set(ctx, map[string]interface{}{
+		"id":     goal.Id,
+		"title":  goal.Title,
+		"status": goal.Status,
+	})
+	if err != nil {
+		log.Fatalf("Failed adding alovelace: %v", err)
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "data added successfully",
-		"goal": goal,
+		"goal":    goal,
 	})
 }
 
@@ -101,55 +167,78 @@ func UpdateGoal(c *fiber.Ctx) error {
 	}
 
 	paramID := c.Params("id")
-	id, err := strconv.Atoi(paramID)
+
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid id.",
-		})
+		log.Fatalln(err)
 	}
 
-	for i, goal := range goals {
-		if goal.Id == id {
-			goals[i] = models.Goal{
-				Id:     id,
-				Title:  body.Title,
-				Status: body.Status,
-			}
-			return c.Status(fiber.StatusOK).JSON(fiber.Map{
-				"message": "data updated successfully",
-				"goal": goals[i],
-			})
-		}
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
+
+	fmt.Print(paramID, body.Status, body.Title)
+
+	_, err = client.Collection("goals").Doc(paramID).Set(ctx, map[string]interface{}{
+		"title":  body.Title,
+		"status": body.Status,
+	}, firestore.MergeAll)
+
+	if err != nil {
+		// Handle any errors in an appropriate way, such as returning them.
+		log.Printf("An error has occurred: %s", err)
 	}
 
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Record not found"})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "data updated successfully",
+	})
+
+	// return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Record not found"})
 }
 
 func DeleteGoal(c *fiber.Ctx) error {
 	// get param
 	paramID := c.Params("id")
 
-	// convert param string to int
-	id, err := strconv.Atoi(paramID)
-
-	// if parameter cannot parse
+	// Use a service account
+	ctx := context.Background()
+	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Cannot parse id",
-			"error":   err,
+		log.Fatalln(err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer client.Close()
+
+	dsnap, err := client.Collection("goals").Doc(paramID).Get(ctx)
+	if err != nil {
+		fmt.Print(err)
+		// if goal not found
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Goal with id " + paramID + " Not found",
 		})
 	}
 
-	// find and delete goal
-	for i, goal := range goals {
-		if goal.Id == id {
-			goals = append(goals[:i], goals[i+1:]...)
-			return c.SendStatus(fiber.StatusNoContent)
-		}
-	}
+	// Test Print line
+	m := dsnap.Data()
+	fmt.Printf("Document data: %#v\n", m)
 
-	// if goal not found
+	_, err = client.Collection("goals").Doc(paramID).Delete(ctx)
+
+	if err != nil {
+		// Handle any errors in an appropriate way, such as returning them.
+		log.Printf("An error has occurred: %s", err)
+	}
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"message": "Goal not found",
+		"message": "Goal with id" + paramID + "Deleted Successfully",
 	})
 }
