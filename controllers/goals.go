@@ -27,7 +27,7 @@ func GetGoals(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile("../serviceAccountKey.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -82,7 +82,10 @@ func GetGoal(c *fiber.Ctx) error {
 
 	dsnap, err := client.Collection("goals").Doc(paramID).Get(ctx)
 	if err != nil {
-		return err
+		fmt.Print(err)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Goal not found",
+		})
 	}
 	m := dsnap.Data()
 	fmt.Printf("Document data: %#v\n", m)
