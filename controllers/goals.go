@@ -15,19 +15,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-var goals = []models.Goal{}
-
-type goalsModel struct {
-	Id     int    `json:"id"`
-	Title  string `json:"title"`
-	Status string `json:"status"`
-}
-
 func GetGoals(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("../serviceAccountKey.json")
+	sa := option.WithCredentialsFile("A:/Go/go_fiber/serviceAccount.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -68,7 +60,7 @@ func GetGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile("A:/Go/go_fiber/serviceAccount.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -128,7 +120,7 @@ func CreateGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile("A:/Go/go_fiber/serviceAccount.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -173,7 +165,7 @@ func UpdateGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile("A:/Go/go_fiber/serviceAccount.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -210,7 +202,7 @@ func DeleteGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile("A:/Go/go_fiber/serviceAccount.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
