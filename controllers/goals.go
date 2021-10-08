@@ -17,6 +17,8 @@ import (
 
 var goals = []models.Goal{}
 
+var firestoreCredentialsLocation = "../serviceAccountKey.json"
+
 type goalsModel struct {
 	Id     int    `json:"id"`
 	Title  string `json:"title"`
@@ -27,7 +29,7 @@ func GetGoals(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("../serviceAccountKey.json")
+	sa := option.WithCredentialsFile(firestoreCredentialsLocation)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -68,7 +70,7 @@ func GetGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile(firestoreCredentialsLocation)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -121,14 +123,13 @@ func CreateGoal(c *fiber.Ctx) error {
 
 	// create a goal variable
 	goal := &models.Goal{
-		Id:     body.Id,
 		Title:  body.Title,
 		Status: body.Status,
 	}
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile(firestoreCredentialsLocation)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -140,7 +141,11 @@ func CreateGoal(c *fiber.Ctx) error {
 	}
 	defer client.Close()
 
-	_, err = client.Collection("goals").Doc(goal.Id).Set(ctx, map[string]interface{}{
+	ref := client.Collection("goals").NewDoc()
+
+	goal.Id = ref.ID
+
+	_, err = ref.Set(ctx, map[string]interface{}{
 		"id":     goal.Id,
 		"title":  goal.Title,
 		"status": goal.Status,
@@ -173,7 +178,7 @@ func UpdateGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile(firestoreCredentialsLocation)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -210,7 +215,7 @@ func DeleteGoal(c *fiber.Ctx) error {
 
 	// Use a service account
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("/home/pc/software-projects/for-someone/rds-rohit/go_fiber/serviceAccountKey.json")
+	sa := option.WithCredentialsFile(firestoreCredentialsLocation)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
