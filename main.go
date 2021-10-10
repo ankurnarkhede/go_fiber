@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	// "log"
 	// "os"
 	// "github.com/joho/godotenv"
@@ -12,11 +14,12 @@ import (
 
 func main() {
 	app := fiber.New()
-	
+	port := os.Getenv("PORT")
+
 	// app.Use(logger.New())
 	routes.Setup(app)
 
-	app.Listen(":8000")
-	fmt.Println("Server is runnig on port: 8000")
-	
+	app.Listen(":" + port)
+	fmt.Println("Server is runnig on port: %v", port)
+
 }

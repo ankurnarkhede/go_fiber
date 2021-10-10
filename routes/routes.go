@@ -7,6 +7,9 @@ import (
 
 func Setup(app *fiber.App) {
 
+	app.Get("/knockknock", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World 👋!")
+	})
 	app.Get("/goals", controllers.GetGoals)
 	app.Get("/goals/:id", controllers.GetGoal)
 	app.Post("/goals/", controllers.CreateGoal)
