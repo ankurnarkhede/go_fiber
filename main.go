@@ -20,6 +20,6 @@ func main() {
 	routes.Setup(app)
 
 	app.Listen(":" + port)
-	fmt.Println("Server is runnig on port: %v", port)
+	fmt.Printf("Server is runnig on port: %v\n", port)
 
 }
