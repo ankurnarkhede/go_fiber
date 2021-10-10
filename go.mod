@@ -1,5 +1,6 @@
 module github.com/RohitKuwar/go_fiber
 
+// +heroku goVersion go1.16      <--add to
 go 1.16
 
 require (
