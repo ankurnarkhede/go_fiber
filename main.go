@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	// "log"
@@ -20,6 +21,7 @@ func main() {
 	routes.Setup(app)
 
 	app.Listen(":" + port)
-	fmt.Printf("Server is runnig on port: %v\n", port)
+	fmt.Printf("Server is running on port: %v\n", port)
+	log.Printf("Server is running on port: %v\n", port)
 
 }
